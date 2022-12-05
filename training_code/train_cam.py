@@ -15,6 +15,7 @@ sys.path.append("../")
 # sys.path.append("./")
 from xception.network.models import model_selection
 
+from psych_loss import PsychLoss
 
 # Description of all argument
 parser = argparse.ArgumentParser()
@@ -110,7 +111,9 @@ lr = 0.005
 solver = optim.SGD(model.parameters(), lr=lr, weight_decay=1e-6, momentum=0.9)
 lr_sched = optim.lr_scheduler.StepLR(solver, step_size=12, gamma=0.1)
 
-criterion = nn.CrossEntropyLoss()
+# I think we should change this first one to a psych_loss
+criterion = PsychLoss()
+# criterion = nn.CrossEntropyLoss()
 criterion_hmap = nn.MSELoss()
 
 # File for logging the training process
