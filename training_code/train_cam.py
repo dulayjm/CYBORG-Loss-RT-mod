@@ -161,12 +161,13 @@ for epoch in range(args.nEpochs):
         testTrueLabel = []
         imgNames=[]
         with torch.set_grad_enabled(train):
-            for batch_idx, (data, cls, imageName, hmap) in enumerate(tqdm(dataloader[phase])):
+            for batch_idx, (data, cls, imageName, hmap, reaction_time) in enumerate(tqdm(dataloader[phase])):
 
                 # Data and ground truth
                 data = data.to(device)
                 cls = cls.to(device)
                 hmap = hmap.to(device)
+                reaction_time = reaction_time.to(device)
                 
                 outputs = model(data)
 

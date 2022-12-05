@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import torch
 import torch.utils.data as data_utl
 from PIL import Image
@@ -24,6 +25,8 @@ class datasetLoader(data_utl.Dataset):
         cid = 0
 
         # Image pre-processing
+        # TODO: later, add in some code to append the *actual* 
+        # reaction/annotating time to the data
         self.data = []
         if network == "xception":
             self.transform = transforms.Compose([
@@ -82,9 +85,12 @@ class datasetLoader(data_utl.Dataset):
     def __getitem__(self, index):
         imagePath, cls, img, hmap = self.data[index]
         imageName = imagePath.split('/')[-1]
-
         # return tranform_img[0:3,:,:], cls, imageName
-        return img, cls, imageName, hmap
+
+        # random reaction time to start, if the sample is wrong
+        reaction_time = np.random_integers(1,28)
+
+        return img, cls, imageName, hmap, reaction_time
 
     def __len__(self):
         return len(self.data)
