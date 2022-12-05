@@ -15,8 +15,6 @@ sys.path.append("../")
 # sys.path.append("./")
 from xception.network.models import model_selection
 
-from psych_loss import PsychLoss
-
 # Description of all argument
 parser = argparse.ArgumentParser()
 parser.add_argument('-batchSize', type=int, default=20)
@@ -168,7 +166,7 @@ for epoch in range(args.nEpochs):
                 data = data.to(device)
                 cls = cls.to(device)
                 hmap = hmap.to(device)
-                reaction_time = reaction_time.to(device)
+                reaction_time_tensor = reaction_time.to(device)
                 
                 outputs = model(data)
 
@@ -178,6 +176,19 @@ for epoch in range(args.nEpochs):
                 acc += corr.item()
                 tot += data.size(0)
                 class_loss = criterion(outputs, cls)                       
+
+                # get the penalties tensor 
+                # penalties are 1 scalar if model got correct
+                # otherwise, they are the psych_tensor val 
+                psych_penalties = torch.ones(len(pred))
+                for i in range(len(pred)):
+                    if pred[i] != cls[i]:
+                        # tunable scaling constant 
+                        psych_scaling_constant = 0.1
+                        psych_penalties[i] = reaction_time_tensor[i] * psych_scaling_constant
+
+                # apply penalties piecewise to class_loss
+                class_loss *= psych_penalties
 
                 # Running model over data
                 if phase == 'train' and alpha != 1:
@@ -217,10 +228,6 @@ for epoch in range(args.nEpochs):
                 if phase == 'train':
                     if alpha != 1.0:
                         loss = (alpha)*(class_loss) + (1-alpha)*(hmap_loss)
-                        # IMPORTANT: here we add the psych loss
-                        l1_lambda = 0.001 # this should be dynamic with psych variables. 
-                        l1_norm = sum(torch.linalg.norm(p, 1) for p in model.parameters())
-                        loss = loss + l1_lambda * l1_norm 
                     else:
                         loss = class_loss
                     train_step += 1
