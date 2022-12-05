@@ -111,9 +111,7 @@ lr = 0.005
 solver = optim.SGD(model.parameters(), lr=lr, weight_decay=1e-6, momentum=0.9)
 lr_sched = optim.lr_scheduler.StepLR(solver, step_size=12, gamma=0.1)
 
-# I think we should change this first one to a psych_loss
-criterion = PsychLoss()
-# criterion = nn.CrossEntropyLoss()
+criterion = nn.CrossEntropyLoss()
 criterion_hmap = nn.MSELoss()
 
 # File for logging the training process
@@ -219,6 +217,10 @@ for epoch in range(args.nEpochs):
                 if phase == 'train':
                     if alpha != 1.0:
                         loss = (alpha)*(class_loss) + (1-alpha)*(hmap_loss)
+                        # IMPORTANT: here we add the psych loss
+                        l1_lambda = 0.001 # this should be dynamic with psych variables. 
+                        l1_norm = sum(torch.linalg.norm(p, 1) for p in model.parameters())
+                        loss = loss + l1_lambda * l1_norm 
                     else:
                         loss = class_loss
                     train_step += 1
